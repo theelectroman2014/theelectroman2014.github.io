@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Electro Man</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky nav, hash-routed views (home / os / codes / about); home = hero + terminal, two section cards, recent posts */
+:root{
+  --bg:#0A0F1F; --panel:#111A31; --panel2:#17213D; --line:#243052;
+  --fg:#E9EDF8; --muted:#8C96B3; --volt:#FFD33D; --blue:#5B8CFF; --mint:#6EE7B7; --ink:#0A0F1F;
+  --display:"Archivo Black","Arial Black",Impact,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.6;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--volt);outline-offset:3px;border-radius:6px}
+.bgfx{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(600px 420px at 88% 0%,rgba(91,140,255,.2),transparent 70%),
+             radial-gradient(520px 380px at 0% 70%,rgba(255,211,61,.06),transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media(min-width:720px){.wrap{padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(40px,env(safe-area-inset-right,0px))}}
+
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(10,15,31,.82);backdrop-filter:blur(12px);border-bottom:1px solid rgba(36,48,82,.6)}
+nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:16px}
+.logo{display:flex;align-items:center;gap:12px;font-family:var(--display);font-size:18px;letter-spacing:.02em;line-height:1.1}
+.mark{width:40px;height:40px;border-radius:11px;background:var(--volt);display:grid;place-items:center;flex:none}
+.logo small{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.14em;font-weight:400;margin-top:3px}
+.links{display:flex;gap:6px}
+.links a{padding:8px 14px;border-radius:999px;color:var(--muted);font-size:15px;transition:color .15s,background .15s}
+.links a:hover{color:var(--fg)}
+.links a.on{color:var(--fg);background:var(--panel2)}
+.ig{display:flex;align-items:center;gap:8px;border:1px solid var(--line);padding:9px 16px;border-radius:999px;font-size:14px;background:var(--panel);white-space:nowrap}
+.ig:hover{border-color:var(--volt)}
+.menu-btn{display:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;width:42px;height:42px}
+@media(max-width:900px){
+  .links{display:none;position:absolute;left:0;right:0;top:100%;flex-direction:column;background:var(--bg);border-bottom:1px solid var(--line);
+    padding:8px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+  .links.open{display:flex}
+  .links a{padding:12px 14px}
+  .menu-btn{display:grid;place-items:center}
+  .ig span{display:none}
+}
+
+main{padding-block:0 80px}
+.view{animation:in .35s ease both}
+@keyframes in{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.view{animation:none}}
+
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center;padding-block:64px 72px}
+.hero>*{min-width:0}
+@media(max-width:900px){.hero{grid-template-columns:1fr;gap:36px;padding-block:40px 48px}}
+.tag{font-family:var(--mono);font-size:13px;color:var(--volt);letter-spacing:.14em}
+h1{font-family:var(--display);font-size:clamp(44px,7vw,78px);line-height:1.02;margin:18px 0 22px;font-weight:400;text-wrap:balance}
+h1 em{font-style:normal;color:var(--volt)}
+.lead{font-size:18px;color:var(--muted);max-width:32em;margin:0}
+
+.term{background:#070B17;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.term .bar{display:flex;gap:7px;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line);align-items:center}
+.dot{width:11px;height:11px;border-radius:50%}
+.bar .t{margin-left:10px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.term pre{margin:0;font-family:var(--mono);font-size:14px;line-height:1.85;padding:20px 22px;color:#C9D2EA;overflow-x:auto;min-height:250px}
+.c-p{color:var(--volt)}.c-b{color:var(--blue)}.c-m{color:var(--muted)}.c-g{color:var(--mint)}
+.cursor{display:inline-block;width:8px;height:17px;background:var(--volt);vertical-align:-3px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.sec{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:800px){.sec{grid-template-columns:1fr}}
+.card{display:block;background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:22px;padding:36px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
+.card:hover{border-color:var(--blue);transform:translateY(-3px)}
+.card.code:hover{border-color:var(--volt)}
+.ico{width:58px;height:58px;border-radius:15px;display:grid;place-items:center;margin-bottom:24px}
+.card h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,3.4vw,36px);margin:0 0 10px;line-height:1.1}
+.card p{color:var(--muted);margin:0;max-width:30em}
+.go{position:absolute;top:36px;right:36px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:20px;transition:background .2s,color .2s}
+.card:hover .go{background:var(--fg);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{font-family:var(--mono);font-size:12.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--fg)}
+button.chip{transition:background .15s,border-color .15s}
+button.chip.on{background:var(--volt);color:var(--ink);border-color:var(--volt)}
+
+.head2{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:72px 0 22px}
+.head2 h3{font-family:var(--display);font-weight:400;font-size:28px;margin:0}
+.head2 a{color:var(--muted);font-size:15px}.head2 a:hover{color:var(--fg)}
+.posts{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:900px){.posts{grid-template-columns:1fr}}
+.post{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel);transition:border-color .2s}
+.post:hover{border-color:var(--muted)}
+.thumb{height:130px;display:flex;align-items:flex-end;padding:16px;font-family:var(--mono);font-size:13px}
+.post .b{padding:18px 20px 22px}
+.k{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;margin-bottom:8px}
+.post h4{font-size:18px;line-height:1.35;font-weight:600;margin:0}
+.post .d{color:var(--muted);font-size:13px;margin-top:10px;font-family:var(--mono)}
+
+.page-head{padding-block:56px 32px;max-width:720px}
+.page-head h1{font-size:clamp(40px,6vw,64px);margin:14px 0 14px}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:24px}
+.search{flex:1 1 260px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--fg);font:inherit}
+.search::placeholder{color:var(--muted)}
+.search:focus{outline:none;border-color:var(--volt)}
+
+.list{display:grid;gap:16px}
+.item{border:1px solid var(--line);border-radius:18px;background:var(--panel);overflow:hidden}
+.item-h{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 22px;width:100%;background:none;border:0;text-align:left}
+.item-h>div{min-width:0}
+.item-h h4{margin:4px 0 0;font-size:19px;font-weight:600;line-height:1.35}
+.item-h .meta{color:var(--muted);font-size:13px;font-family:var(--mono);margin-top:4px}
+.chev{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:transform .2s}
+.item.open .chev{transform:rotate(180deg)}
+.item-b{padding:0 22px 22px;border-top:1px solid var(--line)}
+.item-b>p{color:var(--muted);margin:18px 0 0;max-width:65ch}
+.steps{margin:16px 0 0;padding:0;list-style:none;counter-reset:s;display:grid;gap:14px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start}
+.steps li>div{min-width:0}
+.steps li::before{content:counter(s);width:28px;height:28px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:13px;color:var(--volt)}
+.steps b{display:block;font-weight:600}
+.steps span{color:var(--muted)}
+.warn{margin-top:18px;padding:12px 16px;border-radius:12px;background:rgba(255,211,61,.08);border:1px solid rgba(255,211,61,.3);color:#F5E3A3;font-size:14px}
+
+.codebox{position:relative;margin-top:12px;background:#070B17;border:1px solid var(--line);border-radius:12px}
+.codebox pre{margin:0;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.7;color:#C9D2EA}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 11px;font-size:12px;font-family:var(--mono)}
+.copy:hover{border-color:var(--volt)}
+.copy.ok{background:var(--mint);color:var(--ink);border-color:var(--mint)}
+.empty{color:var(--muted);padding:28px;text-align:center;border:1px dashed var(--line);border-radius:18px}
+.note{font-size:13px;color:var(--muted);font-family:var(--mono);margin-top:28px}
+
+.about{display:grid;grid-template-columns:1.2fr 1fr;gap:32px;align-items:start}
+.about>*{min-width:0}
+@media(max-width:800px){.about{grid-template-columns:1fr}}
+.about p{color:var(--muted);font-size:17px;max-width:60ch}
+.statbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px;display:grid;gap:14px}
+.stat{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:12px;font-family:var(--mono);font-size:14px}
+.stat:last-child{border:0;padding:0}
+.stat span:first-child{color:var(--muted)}
+.cta{display:inline-flex;align-items:center;gap:10px;margin-top:20px;background:var(--volt);color:var(--ink);font-weight:600;padding:14px 22px;border-radius:12px}
+
+.dl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.dl{display:flex;flex-direction:column;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;transition:border-color .2s,transform .2s}
+.dl:hover{border-color:var(--volt);transform:translateY(-2px)}
+.dl .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dl h4{margin:0;font-size:19px;font-weight:600}
+.dl p{margin:0;color:var(--muted);font-size:14.5px;flex:1}
+.dl .src{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.dl .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--volt);color:var(--ink);font-weight:600;padding:11px 16px;border-radius:10px;font-size:15px}
+.dl.off{opacity:.7}
+.dl.off:hover{border-color:var(--line);transform:none}
+.dl .btn.none{background:transparent;border:1px dashed var(--line);color:var(--muted);font-weight:500}
+.os-sec{padding-block:8px 8px;scroll-margin-top:90px}
+.os-head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:16px;margin-bottom:22px}
+.os-head h2{font-family:var(--display);font-weight:400;font-size:clamp(32px,4.5vw,46px);margin:8px 0 0;line-height:1.05}
+.tabs{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:5px;gap:4px}
+.tab{display:flex;align-items:center;gap:8px;background:none;border:0;border-radius:10px;padding:10px 20px;font-weight:600;color:var(--muted);transition:background .15s,color .15s}
+.tab:hover{color:var(--fg)}
+.tab.on{background:var(--volt);color:var(--ink)}
+.tab .n{font-family:var(--mono);font-size:12px;font-weight:500;opacity:.75}
+.dl-group{font-family:var(--display);font-weight:400;font-size:24px;margin:40px 0 16px}
+.dl-group:first-of-type{margin-top:8px}
+footer{position:relative;z-index:1;border-top:1px solid var(--line)}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-block:24px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+
+<div class="bgfx"></div>
+<header><div class="wrap">
+<nav>
+  <a class="logo" href="#ana-sayfa"><span class="mark"><svg width="21" height="25" viewBox="0 0 24 28" aria-hidden="true"><path d="M14 0 2 16h8l-2 12 12-16h-8z" fill="#0A0F1F"/></svg></span>
+    <span>THE ELECTRO MAN<small>KOD · OS · TEKNOLOJİ</small></span></a>
+  <div class="links" id="links">
+    <a href="#ana-sayfa" data-v="ana-sayfa">Ana Sayfa</a>
+    <a href="#isletim-sistemleri" data-v="isletim-sistemleri">İşletim Sistemleri</a>
+    <a href="#kodlar" data-v="kodlar">Kodlar</a>
+    <a href="#hakkimda" data-v="hakkimda">Hakkımda</a>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <a class="ig" href="https://www.instagram.com/the_eloctro_man/" target="_blank" rel="noopener"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg><span>@the_eloctro_man</span></a>
+    <button class="menu-btn" id="menuBtn" aria-label="Menü" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</nav></div></header>
+
+<main class="wrap" id="app"></main>
+
+<footer><div class="wrap"><span>© 2026 The Electro Man</span><span>Kodlar, sistemler ve biraz elektrik ⚡</span></div></footer>
+
+<script>
+const OS = [
+ {id:"arch", cat:"Linux", title:"Arch Linux kurulumu: sıfırdan masaüstüne", meta:"Linux · ~45 dk",
+  intro:"archinstall aracıyla Arch Linux'u hızlıca kurmanın en kolay yolu. Başlamadan önce önemli dosyalarını yedekle.",
+  steps:[["ISO'yu indir","archlinux.org/download adresinden güncel ISO dosyasını indir."],
+         ["USB'ye yaz","Windows'ta Rufus, Linux'ta aşağıdaki dd komutu ile USB'ye yaz."],
+         ["USB'den başlat","BIOS/UEFI'den USB'yi ilk sıraya al ve Arch canlı ortamına gir."],
+         ["İnternete bağlan","Kabloluysa otomatik bağlanır. Wi-Fi için iwctl kullan."],
+         ["archinstall'u çalıştır","Disk, kullanıcı, masaüstü (KDE, GNOME vb.) seçimlerini menüden yap ve kur."]],
+  code:"# USB'ye yazma (sdX yerine kendi USB'ni yaz!)\nsudo dd if=archlinux.iso of=/dev/sdX bs=4M status=progress oflag=sync\n\n# Canlı ortamda Wi-Fi\niwctl\n[iwd]# station wlan0 connect AgAdi\n\n# Kurulum aracı\narchinstall",
+  warn:"dd komutunda yanlış diski seçersen o diskteki her şey silinir. lsblk ile önce kontrol et."},
+ {id:"twrp", cat:"Android ROM", title:"Telefona TWRP yükleme rehberi", meta:"Android · ~20 dk",
+  intro:"TWRP, custom ROM yüklemek ve yedek almak için kullanılan özel recovery. Her telefon modeli için doğru dosyayı twrp.me üzerinden bulmalısın.",
+  steps:[["Bootloader kilidini aç","Modeline göre değişir. Bu işlem telefondaki verileri silebilir."],
+         ["Doğru TWRP dosyasını indir","twrp.me'de telefonunun tam model kodunu ara (örnek: SM-J410F)."],
+         ["Yükle","Samsung'da Odin ile AP kısmına .tar dosyasını ver, diğer markalarda fastboot kullan."],
+         ["Recovery'ye gir","Yükleme biter bitmez tuş kombinasyonuyla doğrudan TWRP'ye gir, yoksa stok recovery geri yazılabilir."]],
+  code:"# Fastboot destekleyen telefonlar için\nadb reboot bootloader\nfastboot flash recovery twrp.img\nfastboot reboot recovery",
+  warn:"Yanlış model dosyası telefonu açılmaz hale getirebilir. Başlamadan önce yedek al."},
+ {id:"ubuntu", cat:"Linux", title:"Windows yanına Ubuntu kurmak (dual boot)", meta:"Linux · ~30 dk",
+  intro:"Windows'u silmeden Ubuntu kurup açılışta hangisini kullanacağını seçebilirsin.",
+  steps:[["Yer aç","Windows'ta Disk Yönetimi'nden bir bölümü küçült, en az 30 GB boş alan bırak."],
+         ["USB hazırla","Ubuntu ISO'sunu Rufus veya balenaEtcher ile USB'ye yaz."],
+         ["Kurulumu başlat","USB'den aç, 'Ubuntu'yu Windows'un yanına kur' seçeneğini seç."],
+         ["Açılışta seç","Kurulumdan sonra GRUB menüsünden Ubuntu ya da Windows'u seç."]],
+  code:"# Kurulumdan sonra sistemi güncelle\nsudo apt update && sudo apt upgrade -y",
+  warn:null},
+ {id:"win", cat:"Windows", title:"Windows 11'i temiz kurulum için USB hazırlama", meta:"Windows · ~15 dk",
+  intro:"Microsoft'un resmi Media Creation Tool aracı ile kurulum USB'si hazırlama.",
+  steps:[["Aracı indir","microsoft.com/software-download/windows11 adresinden Media Creation Tool'u indir."],
+         ["USB seç","En az 8 GB USB tak ve araçta 'USB flash sürücü' seçeneğini seç."],
+         ["Kur","USB'den başlat, 'Özel kurulum' seç ve kurulacak diski belirle."]],
+  code:"REM Kurulum ekranında Shift+F10 ile komut satırı açılır\ndiskpart\nlist disk",
+  warn:"Temiz kurulumda seçtiğin disk tamamen silinir."}
+];
+
+const CODES = [
+ {id:"sifre", lang:"Python", title:"20 satırda şifre üretici", meta:"Python · 14 satır",
+  desc:"Harf, rakam ve sembol karışık güçlü şifre üretir. secrets modülü kullandığı için rastgele değil, güvenli rastgele.",
+  code:"import secrets\nimport string\n\ndef sifre_uret(uzunluk=16):\n    harfler = string.ascii_letters + string.digits + \"!@#$%&*?\"\n    return \"\".join(secrets.choice(harfler) for _ in range(uzunluk))\n\nif __name__ == \"__main__\":\n    try:\n        n = int(input(\"Kaç karakter? \") or 16)\n    except ValueError:\n        n = 16\n    for i in range(5):\n        print(f\"{i+1}. {sifre_uret(n)}\")"},
+ {id:"guncelle", lang:"Bash", title:"Tek komutla sistem güncelleme scripti", meta:"Bash · Linux",
+  desc:"Hangi dağıtımı kullandığını kendisi anlar (apt, pacman, dnf) ve sistemi günceller.",
+  code:"#!/usr/bin/env bash\nset -e\nif command -v apt >/dev/null; then\n  sudo apt update && sudo apt upgrade -y\nelif command -v pacman >/dev/null; then\n  sudo pacman -Syu --noconfirm\nelif command -v dnf >/dev/null; then\n  sudo dnf upgrade -y\nelse\n  echo \"Paket yöneticisi bulunamadı\"; exit 1\nfi\necho \"⚡ Sistem güncel!\""},
+ {id:"saat", lang:"JavaScript", title:"Tarayıcıda canlı dijital saat", meta:"JavaScript · HTML",
+  desc:"Bir HTML dosyasına yapıştır, tarayıcıda aç. Saniye saniye güncellenen saat.",
+  code:"<div id=\"saat\" style=\"font:700 64px monospace\"></div>\n<script>\n  const el = document.getElementById(\"saat\");\n  function guncelle() {\n    el.textContent = new Date().toLocaleTimeString(\"tr-TR\");\n  }\n  guncelle();\n  setInterval(guncelle, 1000);\n<\/script>"},
+ {id:"buton", lang:"HTML/CSS", title:"Neon parlayan buton", meta:"HTML/CSS",
+  desc:"Üzerine gelince parlayan, elektrik efektli buton.",
+  code:"<button class=\"neon\">Tıkla ⚡</button>\n<style>\n.neon {\n  background: #0A0F1F; color: #FFD33D;\n  border: 2px solid #FFD33D; border-radius: 12px;\n  padding: 14px 28px; font-size: 18px; cursor: pointer;\n  transition: box-shadow .2s;\n}\n.neon:hover { box-shadow: 0 0 12px #FFD33D, 0 0 32px #FFD33D88; }\n</style>"},
+ {id:"ip", lang:"Python", title:"Bilgisayarın yerel IP adresini bulma", meta:"Python · 8 satır",
+  desc:"Ağdaki yerel IP adresini gösterir. İnternete veri göndermez.",
+  code:"import socket\n\ns = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)\ntry:\n    s.connect((\"8.8.8.8\", 80))\n    print(\"Yerel IP:\", s.getsockname()[0])\nfinally:\n    s.close()"}
+];
+
+const DL = [
+ {g:"Windows", name:"Windows 11", size:"~6 GB", desc:"En güncel Windows. Resmi sayfadan ISO'yu indir ya da Media Creation Tool ile USB hazırla.", src:"microsoft.com", url:"https://www.microsoft.com/software-download/windows11"},
+ {g:"Windows", name:"Windows 10", size:"~6 GB", desc:"Microsoft hâlâ resmi ISO sunuyor. Desteği Ekim 2025'te bitti, güvenlik güncellemesi gelmiyor.", src:"microsoft.com", url:"https://www.microsoft.com/software-download/windows10ISO"},
+ {g:"Windows", name:"Windows 8.1", size:"—", desc:"Bu sürümün indirme bağlantısı şu an bakım altında.", src:"Bakım altında", url:null},
+ {g:"Windows", name:"Windows 7", size:"—", desc:"Bu sürümün indirme bağlantısı şu an bakım altında.", src:"Bakım altında", url:null},
+ {g:"Windows", name:"Windows XP", size:"—", desc:"Bu sürümün indirme bağlantısı şu an bakım altında.", src:"Bakım altında", url:null},
+
+ {g:"Yeni başlayanlar için", name:"Ubuntu", size:"~6 GB", desc:"En popüler ve en kolay Linux dağıtımı.", src:"ubuntu.com", url:"https://ubuntu.com/download/desktop"},
+ {g:"Yeni başlayanlar için", name:"Linux Mint", size:"~3 GB", desc:"Windows'tan geçenler için tanıdık görünüm, hafif ve sade.", src:"linuxmint.com", url:"https://linuxmint.com/download.php"},
+ {g:"Yeni başlayanlar için", name:"Zorin OS", size:"~3.5 GB", desc:"Windows'a çok benzeyen, şık ve kolay dağıtım.", src:"zorin.com", url:"https://zorin.com/os/download/"},
+ {g:"Yeni başlayanlar için", name:"Pop!_OS", size:"~3 GB", desc:"System76'nın oyun ve geliştirici dostu dağıtımı.", src:"system76.com", url:"https://system76.com/pop/"},
+ {g:"Yeni başlayanlar için", name:"elementary OS", size:"~3 GB", desc:"macOS havasında, temiz ve şık masaüstü.", src:"elementary.io", url:"https://elementary.io/"},
+ {g:"Yeni başlayanlar için", name:"Kubuntu", size:"~4 GB", desc:"KDE Plasma masaüstüyle gelen Ubuntu.", src:"kubuntu.org", url:"https://kubuntu.org/"},
+ {g:"Yeni başlayanlar için", name:"Pardus", size:"~3 GB", desc:"TÜBİTAK'ın geliştirdiği yerli Linux dağıtımı 🇹🇷", src:"pardus.org.tr", url:"https://www.pardus.org.tr/"},
+ {g:"Yeni başlayanlar için", name:"Deepin", size:"~4 GB", desc:"Çok şık kendi masaüstüne sahip dağıtım.", src:"deepin.org", url:"https://www.deepin.org/"},
+
+ {g:"Orta / ileri seviye", name:"Arch Linux", size:"~1.2 GB", desc:"Her şeyi kendin kurduğun, hep güncel dağıtım.", src:"archlinux.org", url:"https://archlinux.org/download/"},
+ {g:"Orta / ileri seviye", name:"Manjaro", size:"~4 GB", desc:"Arch tabanlı ama kurulumu kolay.", src:"manjaro.org", url:"https://manjaro.org/"},
+ {g:"Orta / ileri seviye", name:"EndeavourOS", size:"~3 GB", desc:"Arch'a en yakın, kolay kurulumlu dağıtım.", src:"endeavouros.com", url:"https://endeavouros.com/"},
+ {g:"Orta / ileri seviye", name:"CachyOS", size:"~3 GB", desc:"Performans için optimize edilmiş Arch tabanlı dağıtım.", src:"cachyos.org", url:"https://cachyos.org/"},
+ {g:"Orta / ileri seviye", name:"Garuda Linux", size:"~4 GB", desc:"Oyun odaklı, gösterişli Arch tabanlı dağıtım.", src:"garudalinux.org", url:"https://garudalinux.org/"},
+ {g:"Orta / ileri seviye", name:"Fedora Workstation", size:"~2.5 GB", desc:"Yeni teknolojileri erkenden getiren dağıtım.", src:"fedoraproject.org", url:"https://fedoraproject.org/workstation/download"},
+ {g:"Orta / ileri seviye", name:"Nobara", size:"~4 GB", desc:"Oyun için ayarlanmış Fedora tabanlı dağıtım.", src:"nobaraproject.org", url:"https://nobaraproject.org/"},
+ {g:"Orta / ileri seviye", name:"Bazzite", size:"~7 GB", desc:"Steam ve oyun için hazır, Steam Deck tarzı dağıtım.", src:"bazzite.gg", url:"https://bazzite.gg/"},
+ {g:"Orta / ileri seviye", name:"openSUSE", size:"~4 GB", desc:"Tumbleweed (hep güncel) ve Leap (kararlı) sürümleri var.", src:"opensuse.org", url:"https://get.opensuse.org/"},
+ {g:"Orta / ileri seviye", name:"Debian", size:"~700 MB+", desc:"Kaya gibi sağlam, birçok dağıtımın temeli.", src:"debian.org", url:"https://www.debian.org/download"},
+ {g:"Orta / ileri seviye", name:"Solus", size:"~2 GB", desc:"Bağımsız, masaüstü odaklı dağıtım.", src:"getsol.us", url:"https://getsol.us/"},
+ {g:"Orta / ileri seviye", name:"NixOS", size:"~2.5 GB", desc:"Tüm sistemi tek bir ayar dosyasıyla yönettiğin dağıtım.", src:"nixos.org", url:"https://nixos.org/download/"},
+ {g:"Orta / ileri seviye", name:"Void Linux", size:"~1 GB", desc:"systemd kullanmayan, hızlı ve minimal dağıtım.", src:"voidlinux.org", url:"https://voidlinux.org/download/"},
+ {g:"Orta / ileri seviye", name:"Gentoo", size:"~700 MB", desc:"Her şeyi kaynak koddan derlediğin, en ileri seviye.", src:"gentoo.org", url:"https://www.gentoo.org/downloads/"},
+ {g:"Orta / ileri seviye", name:"Slackware", size:"~3.5 GB", desc:"Hâlâ yaşayan en eski Linux dağıtımı.", src:"slackware.com", url:"http://www.slackware.com/"},
+
+ {g:"Eski / zayıf bilgisayarlar", name:"Lubuntu", size:"~3 GB", desc:"Hafif LXQt masaüstüyle Ubuntu.", src:"lubuntu.me", url:"https://lubuntu.me/"},
+ {g:"Eski / zayıf bilgisayarlar", name:"Xubuntu", size:"~3.5 GB", desc:"XFCE masaüstüyle hafif Ubuntu.", src:"xubuntu.org", url:"https://xubuntu.org/"},
+ {g:"Eski / zayıf bilgisayarlar", name:"MX Linux", size:"~2 GB", desc:"Hızlı, kararlı ve eski bilgisayarlarda çok iyi.", src:"mxlinux.org", url:"https://mxlinux.org/"},
+ {g:"Eski / zayıf bilgisayarlar", name:"Linux Lite", size:"~2.5 GB", desc:"Windows'a benzeyen, düşük donanım dostu.", src:"linuxliteos.com", url:"https://www.linuxliteos.com/"},
+ {g:"Eski / zayıf bilgisayarlar", name:"antiX", size:"~1.5 GB", desc:"Çok eski bilgisayarları bile canlandırır.", src:"antixlinux.com", url:"https://antixlinux.com/"},
+ {g:"Eski / zayıf bilgisayarlar", name:"Bodhi Linux", size:"~1 GB", desc:"Moksha masaüstüyle süper hafif dağıtım.", src:"bodhilinux.com", url:"https://www.bodhilinux.com/"},
+
+ {g:"Güvenlik ve gizlilik", name:"Kali Linux", size:"~4 GB", desc:"Siber güvenlik ve sızma testi araçlarıyla dolu.", src:"kali.org", url:"https://www.kali.org/get-kali/"},
+ {g:"Güvenlik ve gizlilik", name:"Parrot OS", size:"~5 GB", desc:"Güvenlik ve gizlilik odaklı, Kali'ye alternatif.", src:"parrotsec.org", url:"https://parrotsec.org/"},
+ {g:"Güvenlik ve gizlilik", name:"Tails", size:"~1.5 GB", desc:"USB'den çalışan, iz bırakmayan gizlilik sistemi.", src:"tails.net", url:"https://tails.net/"},
+
+ {g:"Sunucu ve diğer", name:"Ubuntu Server", size:"~2.5 GB", desc:"Sunucular için Ubuntu.", src:"ubuntu.com", url:"https://ubuntu.com/download/server"},
+ {g:"Sunucu ve diğer", name:"Rocky Linux", size:"~2 GB+", desc:"RHEL uyumlu kurumsal sunucu dağıtımı.", src:"rockylinux.org", url:"https://rockylinux.org/download"},
+ {g:"Sunucu ve diğer", name:"AlmaLinux", size:"~2 GB+", desc:"RHEL uyumlu, ücretsiz kurumsal dağıtım.", src:"almalinux.org", url:"https://almalinux.org/"},
+ {g:"Sunucu ve diğer", name:"CentOS Stream", size:"~2 GB+", desc:"RHEL'in geliştirme hattı.", src:"centos.org", url:"https://www.centos.org/"},
+ {g:"Sunucu ve diğer", name:"Alpine Linux", size:"~200 MB", desc:"Çok küçük, Docker ve sunucular için ideal.", src:"alpinelinux.org", url:"https://alpinelinux.org/downloads/"},
+ {g:"Sunucu ve diğer", name:"Raspberry Pi OS", size:"~1 GB+", desc:"Raspberry Pi kartları için resmi sistem.", src:"raspberrypi.com", url:"https://www.raspberrypi.com/software/"},
+
+ {g:"USB araçları", name:"Rufus", size:"~1.5 MB", desc:"Windows'ta ISO'yu USB'ye yazmak için en pratik araç.", src:"rufus.ie", url:"https://rufus.ie/"},
+ {g:"USB araçları", name:"balenaEtcher", size:"~100 MB", desc:"Windows, macOS ve Linux'ta çalışan kolay USB yazıcı.", src:"etcher.balena.io", url:"https://etcher.balena.io/"},
+ {g:"USB araçları", name:"Ventoy", size:"~15 MB", desc:"Bir USB'ye birden fazla ISO at, açılışta hangisini istersen seç.", src:"ventoy.net", url:"https://www.ventoy.net/"}
+];
+let dlQuery="", osTab="Linux";
+function osDl(){return `<div style="padding-top:48px">${osSection()}</div>`;}
+function osSection(){
+  const nL=DL.filter(d=>d.g!=="Windows"&&d.g!=="USB araçları").length, nW=DL.filter(d=>d.g==="Windows").length;
+  return `<section class="os-sec" id="os">
+    <div class="os-head"><div><div class="tag">// İNDİR</div><h2>İşletim Sistemleri</h2></div>
+      <div class="tabs" role="tablist">
+        <button class="tab ${osTab==="Linux"?"on":""}" data-tab="Linux" role="tab" aria-selected="${osTab==="Linux"}">🐧 Linux <span class="n">${nL}</span></button>
+        <button class="tab ${osTab==="Windows"?"on":""}" data-tab="Windows" role="tab" aria-selected="${osTab==="Windows"}">⊞ Windows <span class="n">${nW}</span></button>
+      </div></div>
+    <p class="lead" style="margin-bottom:20px">Her buton o sistemin kendi resmi sitesine gider: Linux dağıtımları kendi sitelerine, Windows Microsoft'a.</p>
+    <div class="toolbar" id="dqWrap" ${osTab==="Linux"?"":"hidden"}><input class="search" id="dq" type="search" placeholder="Linux ara… (örnek: mint, kali, pardus)" value="${esc(dlQuery)}" aria-label="Linux ara"></div>
+    <div id="dlList"></div>
+    <p class="note">Boyutlar yaklaşıktır, sürüme göre değişir.</p></section>`;
+}
+function dlPage(){
+  return `<div class="page-head"><div class="tag">// İNDİRMELER</div><h1>ISO ve araçlar</h1>
+    <p class="lead">Her buton o sistemin kendi resmi sitesine gider: Windows için Microsoft'a, Linux dağıtımları için kendi sitelerine. Dosyalar hep güncel ve güvenli olur.</p></div>
+  <div class="toolbar"><input class="search" id="dq" type="search" placeholder="Sistem ara… (örnek: mint, kali, pardus)" value="${esc(dlQuery)}" aria-label="Sistem ara"></div>
+  <div id="dlList"></div>
+  <p class="note">Boyutlar yaklaşıktır, sürüme göre değişir.</p>`;
+}
+function renderDL(){
+  const q=dlQuery.toLocaleLowerCase("tr");
+  const inTab=d=>d.g==="USB araçları"||(osTab==="Windows"?d.g==="Windows":d.g!=="Windows");
+  const list=DL.filter(d=>inTab(d)&&(osTab==="Windows"||(d.name+d.desc+d.g).toLocaleLowerCase("tr").includes(q)));
+  const groups=[...new Set(list.map(d=>d.g))];
+  document.getElementById("dlList").innerHTML = list.length ? groups.map(g=>`<h3 class="dl-group">${g}</h3><div class="dl-grid">${list.filter(d=>d.g===g).map(d=>`<div class="dl${d.url?"":" off"}">
+    <div class="top"><h4>${d.name}</h4><span class="chip">${d.size}</span></div>
+    <p>${d.desc}</p><span class="src">${d.url?"Kaynak: ":""}${d.src}</span>
+    ${d.url?`<a class="btn" href="${d.url}" target="_blank" rel="noopener">Resmi siteye git ↗</a>`:`<span class="btn none">🔧 Bakım altında</span>`}</div>`).join("")}</div>`).join("")
+    : `<div class="empty">"${esc(dlQuery)}" bulunamadı. Başka bir isim dene.</div>`;
+}
+
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const codeBox = c => `<div class="codebox"><button class="copy" data-copy>Kopyala</button><pre><code>${esc(c)}</code></pre></div>`;
+const chev = `<span class="chev" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></span>`;
+const app = document.getElementById("app");
+let osFilter="Tümü", codeFilter="Tümü", codeQuery="";
+
+function home(){
+  return `<section class="hero">
+    <div><div class="tag">// HOŞ GELDİN</div>
+      <h1>Kodlar, sistemler<br>ve biraz <em>elektrik.</em></h1>
+      <p class="lead">Instagram'da paylaştığım tüm kodlar, işletim sistemi kurulumları ve rehberler artık tek bir yerde. Kopyala, dene, öğren.</p></div>
+    <div class="term"><div class="bar"><span class="dot" style="background:#FF5F57"></span><span class="dot" style="background:#FEBC2E"></span><span class="dot" style="background:#28C840"></span><span class="t">electro@man: ~</span></div>
+      <pre id="termOut"></pre></div>
+  </section>
+  <section class="sec">
+    <a class="card" href="#isletim-sistemleri">
+      <div class="ico" style="background:rgba(91,140,255,.15)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B8CFF" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+      <span class="go">↗</span><h2>İşletim Sistemleri</h2>
+      <p>Linux ve Windows indirme linkleri. Hepsi resmi sitelere gider, güvenli ve güncel.</p>
+      <div class="chips"><span class="chip">Linux</span><span class="chip">Windows</span><span class="chip">USB araçları</span></div></a>
+    <a class="card code" href="#kodlar">
+      <div class="ico" style="background:rgba(255,211,61,.14)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFD33D" stroke-width="1.8"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div>
+      <span class="go">↗</span><h2>Kodlar</h2>
+      <p>Paylaştığım kod parçaları, küçük projeler ve scriptler. Tek tıkla kopyala, kendi projende kullan.</p>
+      <div class="chips"><span class="chip">Python</span><span class="chip">JavaScript</span><span class="chip">Bash</span><span class="chip">HTML/CSS</span></div></a>
+  </section>
+  <div class="head2"><h3>Son Paylaşımlar</h3><a href="#kodlar">Tümünü gör →</a></div>
+  <section class="posts">
+    <a class="post" href="#rehberler" data-open="arch"><div class="thumb" style="background:linear-gradient(135deg,#1B2B5E,#2F55C9);color:#DCE5FF">$ archinstall</div>
+      <div class="b"><div class="k" style="color:var(--blue)">İŞLETİM SİSTEMİ</div><h4>Arch Linux kurulumu: sıfırdan masaüstüne</h4><div class="d">~45 dk</div></div></a>
+    <a class="post" href="#kodlar" data-open="sifre"><div class="thumb" style="background:linear-gradient(135deg,#3A2E08,#B8901A);color:#FFF4CC">def sifre_uret():</div>
+      <div class="b"><div class="k" style="color:var(--volt)">KOD</div><h4>Python ile şifre üretici</h4><div class="d">Python · 14 satır</div></div></a>
+    <a class="post" href="#rehberler" data-open="twrp"><div class="thumb" style="background:linear-gradient(135deg,#122A2A,#1F7A6B);color:#D5FFF3">fastboot flash recovery</div>
+      <div class="b"><div class="k" style="color:var(--mint)">REHBER</div><h4>Telefona TWRP yükleme rehberi</h4><div class="d">~20 dk</div></div></a>
+  </section>`;
+}
+
+function osPage(){
+  const cats=["Tümü",...new Set(OS.map(o=>o.cat))];
+  const list=OS.filter(o=>osFilter==="Tümü"||o.cat===osFilter);
+  return `<div class="page-head"><div class="tag">// REHBERLER</div><h1>Kurulum rehberleri</h1>
+    <p class="lead">Linux, Android ve Windows için adım adım rehberler. Bir başlığa dokun, açılsın.</p></div>
+  <div class="toolbar">${cats.map(c=>`<button class="chip ${c===osFilter?"on":""}" data-osf="${c}">${c}</button>`).join("")}</div>
+  <div class="list">${list.map(o=>`<div class="item" id="i-${o.id}">
+    <button class="item-h" data-toggle aria-expanded="false"><div><div class="k" style="color:var(--blue)">${o.cat.toUpperCase()}</div><h4>${o.title}</h4><div class="meta">${o.meta}</div></div>${chev}</button>
+    <div class="item-b" hidden><p>${o.intro}</p>
+      <ol class="steps">${o.steps.map(s=>`<li><div><b>${s[0]}</b><span>${s[1]}</span></div></li>`).join("")}</ol>
+      ${codeBox(o.code)}${o.warn?`<div class="warn">⚠ ${o.warn}</div>`:""}</div></div>`).join("")}</div>
+  <p class="note">Örnek içerik: kendi Instagram paylaşımların buraya eklenecek.</p>`;
+}
+
+function codePage(){
+  const langs=["Tümü",...new Set(CODES.map(c=>c.lang))];
+  return `<div class="page-head"><div class="tag">// KODLAR</div><h1>Kod kütüphanesi</h1>
+    <p class="lead">Paylaştığım kodlar burada. Ara, filtrele, tek tıkla kopyala.</p></div>
+  <div class="toolbar"><input class="search" id="q" type="search" placeholder="Kod ara… (örnek: şifre, saat)" value="${esc(codeQuery)}" aria-label="Kod ara"></div>
+  <div class="toolbar">${langs.map(l=>`<button class="chip ${l===codeFilter?"on":""}" data-cf="${l}">${l}</button>`).join("")}</div>
+  <div class="list" id="codeList"></div>
+  <p class="note">Örnek içerik: kendi Instagram paylaşımların buraya eklenecek.</p>`;
+}
+function renderCodes(){
+  const q=codeQuery.toLocaleLowerCase("tr");
+  const list=CODES.filter(c=>(codeFilter==="Tümü"||c.lang===codeFilter)&&(c.title+c.desc+c.lang).toLocaleLowerCase("tr").includes(q));
+  document.getElementById("codeList").innerHTML = list.length ? list.map(c=>`<div class="item open" id="i-${c.id}">
+    <button class="item-h" data-toggle aria-expanded="true"><div><div class="k" style="color:var(--volt)">${c.lang.toUpperCase()}</div><h4>${c.title}</h4><div class="meta">${c.meta}</div></div>${chev}</button>
+    <div class="item-b"><p>${c.desc}</p>${codeBox(c.code)}</div></div>`).join("")
+    : `<div class="empty">"${esc(codeQuery)}" için kod bulunamadı. Başka bir kelime dene.</div>`;
+}
+
+function about(){
+  return `<div class="page-head"><div class="tag">// HAKKIMDA</div><h1>Ben The Electro Man</h1></div>
+  <div class="about"><div>
+    <p>Kod yazmayı, işletim sistemlerini kurcalamayı ve telefonlara custom ROM atmayı seviyorum. Öğrendiklerimi Instagram'da kısa ve anlaşılır şekilde paylaşıyorum.</p>
+    <p>Bu site, paylaştığım her şeyin düzenli bir arşivi. Bir kodu kaybettiysen ya da bir rehbere tekrar bakmak istiyorsan buradan bulabilirsin.</p>
+    <a class="cta" href="https://www.instagram.com/the_eloctro_man/" target="_blank" rel="noopener">Instagram'da takip et →</a></div>
+    <div class="statbox">
+      <div class="stat"><span>Rehber</span><span>${OS.length}</span></div>
+      <div class="stat"><span>Kod</span><span>${CODES.length}</span></div>
+      <div class="stat"><span>Favori dil</span><span>Python</span></div>
+      <div class="stat"><span>Favori OS</span><span>Linux</span></div>
+    </div></div>`;
+}
+
+function typeTerm(){
+  const out=document.getElementById("termOut"); if(!out) return;
+  const P=`<span class="c-p">electro@man</span>:<span class="c-b">~</span>$ `;
+  const lines=[P+"neofetch --short",`<span class="c-m">  OS     </span> Arch Linux x86_64`,`<span class="c-m">  Shell  </span> zsh`,
+    P+"ls paylasimlar/",`<span class="c-b">isletim-sistemleri/</span>  <span class="c-b">kodlar/</span>  <span class="c-b">rehberler/</span>`,
+    P+"python3 merhaba.py",`<span class="c-g">⚡ Merhaba, The Electro Man'e hoş geldin!</span>`];
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){out.innerHTML=lines.join("\n")+"\n"+P+'<span class="cursor"></span>';return;}
+  let i=0;out.innerHTML=lines[0]+"\n";
+  const t=setInterval(()=>{i++; if(!document.body.contains(out)){clearInterval(t);return;}
+    if(i<lines.length){out.innerHTML+=lines[i]+"\n";}else{out.innerHTML+=P+'<span class="cursor"></span>';clearInterval(t);}},380);
+}
+
+let pendingOpen=null;
+function route(){
+  const v=(location.hash||"#ana-sayfa").slice(1);
+  const views={"ana-sayfa":home,"isletim-sistemleri":osDl,"indirmeler":osDl,"kodlar":codePage,"rehberler":osPage,"hakkimda":about};
+  const fn=views[v]||home;
+  app.innerHTML=`<div class="view">${fn()}</div>`;
+  const navV=v==="indirmeler"?"isletim-sistemleri":v;document.querySelectorAll(".links a").forEach(a=>a.classList.toggle("on",a.dataset.v===(views[v]?navV:"ana-sayfa")));
+  document.getElementById("links").classList.remove("open");
+  if(fn===codePage) renderCodes();
+  if(fn===osDl) renderDL();
+  if(fn===home) typeTerm();
+  if(pendingOpen){const el=document.getElementById("i-"+pendingOpen); if(el){ if(!el.classList.contains("open")) el.querySelector("[data-toggle]").click(); setTimeout(()=>el.scrollIntoView({block:"center"}),60);} pendingOpen=null;}
+  else window.scrollTo(0,0);
+}
+
+document.addEventListener("click",e=>{
+  const open=e.target.closest("[data-open]"); if(open) pendingOpen=open.dataset.open;
+  const tg=e.target.closest("[data-toggle]");
+  if(tg){const it=tg.closest(".item"),b=it.querySelector(".item-b");const on=!it.classList.contains("open");
+    it.classList.toggle("open",on);b.hidden=!on;tg.setAttribute("aria-expanded",on);return;}
+  const tb=e.target.closest("[data-tab]");
+  if(tb){osTab=tb.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>{const on=x===tb;x.classList.toggle("on",on);x.setAttribute("aria-selected",on)});
+    document.getElementById("dqWrap").hidden=osTab!=="Linux";renderDL();return;}
+  const f=e.target.closest("[data-osf]"); if(f){osFilter=f.dataset.osf;route();return;}
+  const c=e.target.closest("[data-cf]"); if(c){codeFilter=c.dataset.cf;
+    document.querySelectorAll("[data-cf]").forEach(x=>x.classList.toggle("on",x===c));renderCodes();return;}
+  const cp=e.target.closest("[data-copy]");
+  if(cp){const pre=cp.parentElement.querySelector("pre");const txt=pre.innerText;
+    const done=()=>{cp.textContent="Kopyalandı ✓";cp.classList.add("ok");setTimeout(()=>{cp.textContent="Kopyala";cp.classList.remove("ok")},1600)};
+    const fallback=()=>{const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);cp.textContent="Seçildi, kopyala";};
+    try{navigator.clipboard.writeText(txt).then(done,fallback);}catch(err){fallback();}
+    return;}
+});
+document.addEventListener("input",e=>{if(e.target.id==="q"){codeQuery=e.target.value;renderCodes();}if(e.target.id==="dq"){dlQuery=e.target.value;renderDL();}});
+document.getElementById("menuBtn").addEventListener("click",function(){const l=document.getElementById("links");const o=l.classList.toggle("open");this.setAttribute("aria-expanded",o);});
+addEventListener("hashchange",route);
+route();
+</script>
+</body>
+</html>
